@@ -122,6 +122,24 @@
         <p class="mt-1 text-sm text-neutral-600">Enter a destination, number of days, budget, and interests.</p>
 
         <form id="plannerForm" class="mt-6 space-y-4" autocomplete="off">
+          <!-- Business Travel Mode toggle -->
+          <div class="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
+            <div class="flex items-center gap-3">
+              <span id="modeIcon" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-neutral-200 text-neutral-700">
+                <i data-lucide="palmtree" class="h-5 w-5"></i>
+              </span>
+              <div>
+                <div class="font-medium text-neutral-900">Business Travel Mode</div>
+                <p id="modeSubtitle" class="text-xs text-neutral-500">Off &mdash; showing leisure travel options.</p>
+              </div>
+            </div>
+            <button id="businessToggle" type="button" role="switch" aria-checked="false"
+                    class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-neutral-300 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400">
+              <span id="toggleKnob" class="inline-block h-4 w-4 translate-x-1 transform rounded-full bg-white shadow transition-transform"></span>
+            </button>
+          </div>
+          <input id="travelStyleValue" type="hidden" value="leisure" />
+
           <!-- Destination -->
           <div>
             <label for="destination" class="block text-sm font-medium text-neutral-800">Destination</label>
@@ -180,8 +198,8 @@
             </div>
           </div>
 
-          <!-- Interests -->
-          <div>
+          <!-- Interests (leisure mode) -->
+          <div id="leisureFields">
             <label for="interests" class="block text-sm font-medium text-neutral-800">Interests</label>
             <div class="mt-2 relative">
               <input id="interests" type="text" placeholder="e.g., food, culture, museums, nightlife"
@@ -189,6 +207,24 @@
               <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
                 <i data-lucide="sparkles" class="h-4.5 w-4.5"></i>
               </span>
+            </div>
+          </div>
+
+          <!-- Work priorities (business mode) -->
+          <div id="businessFields" class="hidden">
+            <label for="businessPriorities" class="block text-sm font-medium text-neutral-800">Work Priorities</label>
+            <div class="mt-2 relative">
+              <input id="businessPriorities" type="text" placeholder="e.g., client meetings, conference sessions, coworking days"
+                     class="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-neutral-900 placeholder-neutral-400 shadow-sm outline-none ring-0 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200" />
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                <i data-lucide="briefcase" class="h-4.5 w-4.5"></i>
+              </span>
+            </div>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <button type="button" data-chip="coworking spaces" class="chip-btn rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50">+ Coworking spaces</button>
+              <button type="button" data-chip="business dining" class="chip-btn rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50">+ Business dining</button>
+              <button type="button" data-chip="airport lounge access" class="chip-btn rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50">+ Airport lounge access</button>
+              <button type="button" data-chip="efficient transit" class="chip-btn rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50">+ Efficient transit</button>
             </div>
           </div>
 
@@ -211,24 +247,24 @@
           <div class="mt-6 grid gap-3 sm:grid-cols-3">
             <div class="rounded-lg border border-neutral-200 p-4">
               <div class="flex items-center gap-2 text-neutral-700">
-                <i data-lucide="sunrise" class="h-4 w-4"></i>
-                Morning ideas
+                <i id="phIcon1" data-lucide="sunrise" class="h-4 w-4"></i>
+                <span id="phTitle1">Morning ideas</span>
               </div>
-              <p class="mt-1 text-sm text-neutral-600">Neighborhood walk, cafe, must-see spot.</p>
+              <p id="phText1" class="mt-1 text-sm text-neutral-600">Neighborhood walk, cafe, must-see spot.</p>
             </div>
             <div class="rounded-lg border border-neutral-200 p-4">
               <div class="flex items-center gap-2 text-neutral-700">
-                <i data-lucide="utensils" class="h-4 w-4"></i>
-                Food moments
+                <i id="phIcon2" data-lucide="utensils" class="h-4 w-4"></i>
+                <span id="phTitle2">Food moments</span>
               </div>
-              <p class="mt-1 text-sm text-neutral-600">Street food to chef-led tastings.</p>
+              <p id="phText2" class="mt-1 text-sm text-neutral-600">Street food to chef-led tastings.</p>
             </div>
             <div class="rounded-lg border border-neutral-200 p-4">
               <div class="flex items-center gap-2 text-neutral-700">
-                <i data-lucide="moon" class="h-4 w-4"></i>
-                Evenings
+                <i id="phIcon3" data-lucide="moon" class="h-4 w-4"></i>
+                <span id="phTitle3">Evenings</span>
               </div>
-              <p class="mt-1 text-sm text-neutral-600">Sunsets, shows, speakeasies.</p>
+              <p id="phText3" class="mt-1 text-sm text-neutral-600">Sunsets, shows, speakeasies.</p>
             </div>
           </div>
         </div>
@@ -288,6 +324,68 @@
       }
     });
 
+    // Business Travel Mode toggle
+    const businessToggle = document.getElementById('businessToggle');
+    const toggleKnob = document.getElementById('toggleKnob');
+    const travelStyleValue = document.getElementById('travelStyleValue');
+    const modeIcon = document.getElementById('modeIcon');
+    const modeSubtitle = document.getElementById('modeSubtitle');
+    const leisureFields = document.getElementById('leisureFields');
+    const businessFields = document.getElementById('businessFields');
+
+    const placeholderCopy = {
+      leisure: [
+        { icon: 'sunrise', title: 'Morning ideas', text: 'Neighborhood walk, cafe, must-see spot.' },
+        { icon: 'utensils', title: 'Food moments', text: 'Street food to chef-led tastings.' },
+        { icon: 'moon', title: 'Evenings', text: 'Sunsets, shows, speakeasies.' },
+      ],
+      business: [
+        { icon: 'calendar-check', title: 'Meeting blocks', text: 'Time buffered around calls and client visits.' },
+        { icon: 'wifi', title: 'Work-friendly spots', text: 'Coworking spaces and quiet cafes nearby.' },
+        { icon: 'briefcase', title: 'Client dinners', text: 'Reliable venues for business dining.' },
+      ],
+    };
+
+    function applyMode(isBusiness) {
+      travelStyleValue.value = isBusiness ? 'business' : 'leisure';
+      businessToggle.setAttribute('aria-checked', String(isBusiness));
+      businessToggle.classList.toggle('bg-neutral-900', isBusiness);
+      businessToggle.classList.toggle('bg-neutral-300', !isBusiness);
+      toggleKnob.classList.toggle('translate-x-6', isBusiness);
+      toggleKnob.classList.toggle('translate-x-1', !isBusiness);
+
+      leisureFields.classList.toggle('hidden', isBusiness);
+      businessFields.classList.toggle('hidden', !isBusiness);
+
+      modeIcon.innerHTML = `<i data-lucide="${isBusiness ? 'briefcase' : 'palmtree'}" class="h-5 w-5"></i>`;
+      modeSubtitle.textContent = isBusiness
+        ? 'On — showing business travel features.'
+        : 'Off — showing leisure travel options.';
+
+      const copy = isBusiness ? placeholderCopy.business : placeholderCopy.leisure;
+      copy.forEach((item, i) => {
+        document.getElementById(`phIcon${i + 1}`).setAttribute('data-lucide', item.icon);
+        document.getElementById(`phTitle${i + 1}`).textContent = item.title;
+        document.getElementById(`phText${i + 1}`).textContent = item.text;
+      });
+
+      renderIcons();
+    }
+
+    businessToggle.addEventListener('click', () => {
+      applyMode(businessToggle.getAttribute('aria-checked') !== 'true');
+    });
+
+    document.querySelectorAll('.chip-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const priorities = document.getElementById('businessPriorities');
+        const term = chip.getAttribute('data-chip');
+        const current = priorities.value.split(',').map(s => s.trim()).filter(Boolean);
+        if (!current.includes(term)) current.push(term);
+        priorities.value = current.join(', ');
+      });
+    });
+
     // Planner logic (calls backend)
     const form = document.getElementById('plannerForm');
     const results = document.getElementById('results');
@@ -300,7 +398,10 @@
       const durationNum = Math.max(1, Math.min(30, parseInt(document.getElementById('duration').value || '0', 10)));
       const duration = isFinite(durationNum) ? `${durationNum} days` : '3 days';
       const budget = document.getElementById('budgetValue').value || 'moderate';
-      const interests = (document.getElementById('interests').value || '').trim();
+      const travel_style = travelStyleValue.value || 'leisure';
+      const interests = travel_style === 'business'
+        ? (document.getElementById('businessPriorities').value || '').trim()
+        : (document.getElementById('interests').value || '').trim();
 
       if (!destination || !durationNum) {
         alert('Please enter a destination and duration.');
@@ -323,7 +424,7 @@
         const resp = await fetch('/plan-trip', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ destination, duration, budget, interests })
+          body: JSON.stringify({ destination, duration, budget, interests, travel_style })
         });
 
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

@@ -646,21 +646,28 @@ def local_agent(state: TripState) -> TripState:
             context_lines.append("=== End of Curated Guides ===\n")
     
     context_text = "\n".join(context_lines) if context_lines else ""
-    
+
+    mode_guidance = (
+        "Favor coworking spaces, business-friendly dining, reliable wifi, and efficient transit near meeting areas."
+        if travel_style == "business"
+        else "Favor immersive cultural experiences, relaxation, and exploration."
+    )
+
     prompt_t = (
         "You are a local guide.\n"
         "Find authentic experiences in {destination} for someone interested in: {interests}.\n"
-        "Travel style: {travel_style}. Use tools to gather local insights.\n"
+        "Travel style: {travel_style}. {mode_guidance} Use tools to gather local insights.\n"
     )
-    
+
     # Add retrieved context to prompt if available
     if context_text:
         prompt_t += "\nRelevant curated experiences from our database:\n{context}\n"
-    
+
     vars_ = {
         "destination": destination,
         "interests": interests,
         "travel_style": travel_style,
+        "mode_guidance": mode_guidance,
         "context": context_text if context_text else "No curated context available.",
     }
     
@@ -714,9 +721,17 @@ def itinerary_agent(state: TripState) -> TripState:
     duration = req["duration"]
     travel_style = req.get("travel_style", "standard")
     user_input = (req.get("user_input") or "").strip()
-    
+
+    mode_guidance = (
+        "Structure the schedule around meeting/work blocks, keep transit efficient, "
+        "and flag work-friendly venues (coworking, wifi, business dining)."
+        if travel_style == "business"
+        else "Structure the schedule around sightseeing, food, and cultural experiences at a relaxed pace."
+    )
+
     prompt_parts = [
         "Create a {duration} itinerary for {destination} ({travel_style}).",
+        "{mode_guidance}",
         "",
         "Inputs:",
         "Research: {research}",
@@ -725,12 +740,13 @@ def itinerary_agent(state: TripState) -> TripState:
     ]
     if user_input:
         prompt_parts.append("User input: {user_input}")
-    
+
     prompt_t = "\n".join(prompt_parts)
     vars_ = {
         "duration": duration,
         "destination": destination,
         "travel_style": travel_style,
+        "mode_guidance": mode_guidance,
         "research": (state.get("research") or "")[:400],
         "budget": (state.get("budget") or "")[:400],
         "local": (state.get("local") or "")[:400],
